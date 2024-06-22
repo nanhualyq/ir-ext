@@ -101,7 +101,6 @@
             currentTab.id,
             "getPageInfo",
         );
-        // const { url, title } = currentTab;
         updatePromise = browser.bookmarks.update(targetBookmark.id, {
             url,
             title,
@@ -115,8 +114,15 @@
         const newMarkbook = siblings[targetBookmark.index + offset];
         if (newMarkbook) {
             browser.tabs.update(currentTab.id, { url: newMarkbook.url });
-            window.close()
+            window.close();
         }
+    }
+    function cutText(text = "", max = 128) {
+        let str = text.slice(0, max);
+        if (str.length < text.length) {
+            str += "...";
+        }
+        return str;
     }
 </script>
 
@@ -124,7 +130,9 @@
     <p>
         <label>
             <input type="radio" bind:group={targetBookmark} value={item} />
-            {item.title} ({item.url})
+            {cutText(item.title)} (
+            <a href={item.url}>{cutText(item.url)}</a>
+            )
         </label>
     </p>
 {:else}
@@ -147,11 +155,15 @@
 
 <p>
     <!-- svelte-ignore a11y-accesskey -->
-    <button accesskey="p" on:click={() => readSibling(-1)} disabled={!targetBookmark}
-        >Prev</button
+    <button
+        accesskey="p"
+        on:click={() => readSibling(-1)}
+        disabled={!targetBookmark}>Prev</button
     >
     <!-- svelte-ignore a11y-accesskey -->
-    <button accesskey="n" on:click={() => readSibling(1)} disabled={!targetBookmark}
-        >Next</button
+    <button
+        accesskey="n"
+        on:click={() => readSibling(1)}
+        disabled={!targetBookmark}>Next</button
     >
 </p>
