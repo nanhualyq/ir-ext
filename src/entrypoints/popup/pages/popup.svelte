@@ -56,6 +56,13 @@
         }
         const url = new URL(currentTab.url + "");
 
+        const bookmarks = await browser.bookmarks.search({
+            url: url.href,
+        });
+        if (bookmarks.length) {
+            return bookmarks;
+        }
+
         if (!url.protocol.includes("http")) {
             return;
         }
@@ -130,7 +137,7 @@
     <p>
         <label>
             <input type="radio" bind:group={targetBookmark} value={item} />
-            {cutText(item.title)} (
+            {item.parentId} / {cutText(item.title)} (
             <a href={item.url}>{cutText(item.url)}</a>
             )
         </label>
