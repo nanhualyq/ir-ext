@@ -20,6 +20,7 @@ function getPageInfo(sendResponse: (o: any) => void) {
       url.searchParams.set('t', Math.floor(video.currentTime) + '')
     }
   }
+  // 单个元素内的文本包含\n会被换成空白
   const selection = String(window.getSelection())
   if (selection) {
     title += ` - ${JSON.stringify({
@@ -39,11 +40,12 @@ async function scrollLastText() {
   if (!bookmark) {
     return
   }
-  const jsonText = bookmark.title.match(/\{.*\}$/)?.[0]
+  const jsonText = bookmark.title.match(/\{.*\}$/)?.[0] || ''
   const { lastText } = JSON.parse(jsonText) || {}
   if (!lastText) {
     return
   }
-  const doms = Array.from(document.querySelectorAll('*')).filter(el => el.textContent?.includes(lastText))
+  const doms = Array.from(document.querySelectorAll('*')).filter(el => el.textContent?.replaceAll(/\n/g, ' ')?.includes(lastText))
+
   doms[doms.length - 1]?.scrollIntoView()
 }
