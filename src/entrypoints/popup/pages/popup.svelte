@@ -68,7 +68,13 @@
         }
 
         while (1) {
-            if (url.hash) {
+            let youtubeList = ''
+            if (
+                url.hostname.endsWith("youtube.com") &&
+                url.searchParams.has("list")
+            ) {
+                youtubeList = `list=${url.searchParams.get("list")}`
+            } else if (url.hash) {
                 if (url.hash.lastIndexOf("&") >= 0) {
                     url.hash = url.hash.slice(0, url.hash.lastIndexOf("&"));
                 } else if (url.hash.lastIndexOf("?") >= 0) {
@@ -85,7 +91,7 @@
                 url.pathname = url.pathname.replace(/\/[^/]*$/, "");
             }
 
-            const bookmarks = await browser.bookmarks.search(url.href);
+            const bookmarks = await browser.bookmarks.search(youtubeList || url.href);
 
             if (bookmarks.length > 0) {
                 return bookmarks;
@@ -137,7 +143,7 @@
     <p>
         <label>
             <input type="radio" bind:group={targetBookmark} value={item} />
-            {item.parentId} / {cutText(item.title)} (
+            {cutText(item.title)} (
             <a href={item.url}>{cutText(item.url)}</a>
             )
         </label>
