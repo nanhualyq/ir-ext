@@ -23,10 +23,9 @@ function getPageInfo(sendResponse: (o: any) => void) {
   // 单个元素内的文本包含\n会被换成空白
   const selection = window.getSelection()
   if (selection?.type === 'Range') {
-    let element = selection.focusNode?.nodeName
-    if (element === '#text') {
-      element = '*'
-    }
+    const element = [selection.focusNode?.nodeName,
+    selection.focusNode?.parentNode?.nodeName]
+      .find(t => t !== '#text')
     title += ` - ${JSON.stringify({
       lastText: selection.toString().trim(),
       element
@@ -50,6 +49,8 @@ async function scrollLastText() {
   if (!lastText) {
     return
   }
+  console.log(lastText, `lastText`);
+
 
   const doms = Array.from(document.querySelectorAll(element || '*'))
     .filter(el => el.textContent
