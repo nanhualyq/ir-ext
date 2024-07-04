@@ -53,7 +53,7 @@ async function scrollLastText() {
 
   const doms = Array.from(document.querySelectorAll(element || '*'))
     .filter(el => el.textContent
-      ?.replaceAll(/\n/g, ' ')
+      ?.replaceAll(/\n|\s+/g, ' ')
       ?.includes(lastText)
     )
 
