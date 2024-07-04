@@ -21,10 +21,15 @@ function getPageInfo(sendResponse: (o: any) => void) {
     }
   }
   // 单个元素内的文本包含\n会被换成空白
-  const selection = String(window.getSelection())
-  if (selection) {
+  const selection = window.getSelection()
+  if (selection?.type === 'Range') {
+    let element = selection.focusNode?.nodeName
+    if (element === '#text') {
+      element = '*'
+    }
     title += ` - ${JSON.stringify({
-      lastText: selection.trim()
+      lastText: selection.toString().trim(),
+      element
     })}`
   }
   sendResponse({
@@ -41,11 +46,16 @@ async function scrollLastText() {
     return
   }
   const jsonText = bookmark.title.match(/\{.*\}$/)?.[0] || ''
-  const { lastText } = JSON.parse(jsonText) || {}
+  const { lastText, element } = JSON.parse(jsonText) || {}
   if (!lastText) {
     return
   }
-  const doms = Array.from(document.querySelectorAll('*')).filter(el => el.textContent?.replaceAll(/\n/g, ' ')?.includes(lastText))
+
+  const doms = Array.from(document.querySelectorAll(element || '*'))
+    .filter(el => el.textContent
+      ?.replaceAll(/\n/g, ' ')
+      ?.includes(lastText)
+    )
 
   doms[doms.length - 1]?.scrollIntoView()
 }
