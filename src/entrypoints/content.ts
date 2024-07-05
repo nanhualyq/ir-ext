@@ -49,8 +49,6 @@ async function scrollLastText() {
   if (!lastText) {
     return
   }
-  console.log(lastText, `lastText`);
-
 
   const doms = Array.from(document.querySelectorAll(element || '*'))
     .filter(el => el.textContent
