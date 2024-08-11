@@ -23,12 +23,8 @@ function getPageInfo(sendResponse: (o: any) => void) {
   // 单个元素内的文本包含\n会被换成空白
   const selection = window.getSelection()
   if (selection?.type === 'Range') {
-    const element = [selection.focusNode?.nodeName,
-    selection.focusNode?.parentNode?.nodeName]
-      .find(t => t !== '#text')
     title += ` - ${JSON.stringify({
-      lastText: selection.toString().trim(),
-      element
+      lastText: selection.toString().trim()
     })}`
   }
   sendResponse({
@@ -45,12 +41,12 @@ async function scrollLastText() {
     return
   }
   const jsonText = bookmark.title.match(/\{.*\}$/)?.[0] || ''
-  const { lastText, element } = JSON.parse(jsonText) || {}
+  const { lastText } = JSON.parse(jsonText) || {}
   if (!lastText) {
     return
   }
 
-  const doms = Array.from(document.querySelectorAll(element || '*'))
+  const doms = Array.from(document.querySelectorAll('*:not(script)'))
     .filter(el => el.textContent
       ?.replaceAll(/\n|\s+/g, ' ')
       ?.includes(lastText)
