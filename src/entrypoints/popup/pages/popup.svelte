@@ -124,7 +124,16 @@
         const siblings = await browser.bookmarks.getChildren(
             targetBookmark.parentId,
         );
-        const newMarkbook = siblings[targetBookmark.index + offset];
+        const lastIndex = siblings.length - 1
+        const currentIndex = targetBookmark.index
+        let newIndex = currentIndex + offset
+        // circle when first or last
+        if (currentIndex === 0 && offset === -1) {
+            newIndex = lastIndex
+        } else if (currentIndex === lastIndex && offset === 1) {
+            newIndex = 0
+        }
+        const newMarkbook = siblings[newIndex];
         if (newMarkbook) {
             browser.tabs.update(currentTab.id, { url: newMarkbook.url });
             window.close();
