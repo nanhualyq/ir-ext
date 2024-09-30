@@ -124,19 +124,20 @@
         const siblings = await browser.bookmarks.getChildren(
             targetBookmark.parentId,
         );
-        const lastIndex = siblings.length - 1
-        const currentIndex = targetBookmark.index
-        let newIndex = currentIndex + offset
-        // circle when first or last
-        if (currentIndex === 0 && offset === -1) {
-            newIndex = lastIndex
-        } else if (currentIndex === lastIndex && offset === 1) {
-            newIndex = 0
-        }
-        const newMarkbook = siblings[newIndex];
-        if (newMarkbook) {
-            browser.tabs.update(currentTab.id, { url: newMarkbook.url });
-            window.close();
+        
+        let newIndex = targetBookmark.index
+        for (let i = 0; i < siblings.length; i++) {
+            newIndex += offset
+            if (newIndex === -1) {
+                newIndex = siblings.length - 1
+            }
+            const newMarkbook = siblings[newIndex % siblings.length];
+            // skip folder & separator
+            if (newMarkbook.type === 'bookmark') {
+                browser.tabs.update(currentTab.id, { url: newMarkbook.url });
+                window.close();
+                break
+            }
         }
     }
     function cutText(text = "", max = 128) {
