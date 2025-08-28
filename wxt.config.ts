@@ -2,16 +2,15 @@ import { defineConfig } from 'wxt';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
-  srcDir: 'src',
-  modules: ['@wxt-dev/module-svelte'],
+  modules: ['@wxt-dev/module-vue'],
   manifest: {
+    version: '0.2.5',
     permissions: [
-      // '<all_urls>',
-      'activeTab',
       'bookmarks',
-      'tabs'
+      'activeTab', // 生产上没有这个，读不到当前tab的url和title
+      // 'tabs'
     ],
-    "applications": {
+    "browser_specific_settings": {
       "gecko": {
         "id": "ir-ext@lyq.one"
       }
@@ -23,6 +22,5 @@ export default defineConfig({
         }
       }
     }
-
   }
 });
