@@ -4,7 +4,7 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   modules: ['@wxt-dev/module-vue'],
   manifest: {
-    version: '0.2.5',
+    version: '0.2.6',
     permissions: [
       'bookmarks',
       'activeTab', // 生产上没有这个，读不到当前tab的url和title

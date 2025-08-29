@@ -62,8 +62,9 @@ async function readSibling(offset: number) {
             newIndex = siblings.length - 1
         }
         const newMarkbook = siblings[newIndex % siblings.length];
-        // skip folder and separator
-        if (newMarkbook.children || newMarkbook.url === 'data:') {
+        const isFolder = newMarkbook.children || !newMarkbook.url
+        const isSeparator = newMarkbook.url === 'data:'
+        if (isFolder || isSeparator) {
             continue
         }
         browser.tabs.update(currentTab.value?.id, { url: newMarkbook.url });

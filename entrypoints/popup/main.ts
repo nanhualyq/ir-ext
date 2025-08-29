@@ -16,17 +16,3 @@ app.config.warnHandler = (msg, instance, trace) => {
 }
 
 app.mount('#app')
-
-// function dumpError(err: string) {
-//     const app = document.querySelector('#error')
-//     if (app) {
-//         app.textContent = err
-//     }
-// }
-
-// window.onerror = function (message, source, lineno, colno, error) {
-//     dumpError(message.toString())
-// }
-// window.addEventListener('unhandledrejection', (event) => {
-//     dumpError(event.reason)
-// });

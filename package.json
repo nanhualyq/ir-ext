@@ -1,6 +1,6 @@
 {
   "name": "ir-ext",
-  "description": "browser extension for Incremental Reading",
+  "description": "Incremental Reading by bookmarks",
   "private": true,
   "version": "0.0.0",
   "type": "module",
