@@ -28,6 +28,7 @@ async function getCurrentTab() {
 }
 async function getHitBookmarks(tab: Browser.tabs.Tab) {
     const activeUrl = new URL(tab.url || '')
+    activeUrl.hash = ''
     const keywords = [
         activeUrl.href,
         tab.title
@@ -36,7 +37,6 @@ async function getHitBookmarks(tab: Browser.tabs.Tab) {
         activeUrl.pathname = activeUrl.pathname.replace(/\/[^/]*$/, "");
         keywords.push(activeUrl.href)
     }
-
     for (const [key, value] of activeUrl.searchParams.entries()) {
         keywords.push(`${key}=${value}`)
     }

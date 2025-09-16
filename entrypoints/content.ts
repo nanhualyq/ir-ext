@@ -1,4 +1,3 @@
-import background from "./background";
 import { onMessage, sendMessage } from "./messaging";
 
 export default defineContentScript({
