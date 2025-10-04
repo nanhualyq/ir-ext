@@ -1,43 +1,123 @@
 <template>
-  <q-page class="row items-center justify-evenly">
-    <example-component
-      title="Example component"
-      active
-      :todos="todos"
-      :meta="meta"
-    ></example-component>
-  </q-page>
+  <main>
+    <q-list bordered dense>
+      <q-item tag="label" v-ripple v-for="b in hitBookmarks" :key="b.id" tabindex="-1">
+        <q-item-section avatar>
+          <q-radio v-model="selectedBookmark" :val="b" />
+        </q-item-section>
+        <q-item-section>
+          <a :href="b.url + ''" target="_blank" tabindex="-1">{{ b.title }}</a>
+        </q-item-section>
+      </q-item>
+    </q-list>
+    <q-btn-group v-if="selectedBookmark">
+      <q-btn color="primary" icon="check" label="Update" @click="replaceBookmark" accesskey="u" />
+      <q-btn label="Prev" icon="arrow_back" accesskey="p" @click="gotoSibling(-1)" />
+      <q-btn label="Next" icon="arrow_forward" accesskey="n" @click="gotoSibling(1)" />
+    </q-btn-group>
+  </main>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import type { Todo, Meta } from 'components/models';
-import ExampleComponent from 'components/ExampleComponent.vue';
+import { useQuasar } from 'quasar';
+import { onMounted, ref } from 'vue';
 
-const todos = ref<Todo[]>([
-  {
-    id: 1,
-    content: 'ct1',
-  },
-  {
-    id: 2,
-    content: 'ct2',
-  },
-  {
-    id: 3,
-    content: 'ct3',
-  },
-  {
-    id: 4,
-    content: 'ct4',
-  },
-  {
-    id: 5,
-    content: 'ct5',
-  },
-]);
+const $q = useQuasar()
+const hitBookmarks = ref<chrome.bookmarks.BookmarkTreeNode[]>([])
+const selectedBookmark = ref<chrome.bookmarks.BookmarkTreeNode>()
+const currentTab = ref<chrome.tabs.Tab>()
 
-const meta = ref<Meta>({
-  totalCount: 1200,
-});
+function assert(conn: unknown, message: string) {
+  if (!conn) {
+    throw new Error(message)
+  }
+}
+
+onMounted(async () => {
+  currentTab.value = await getCurrentTab()
+  hitBookmarks.value = await setHitBookmarks()
+  assert(hitBookmarks.value.length, 'no bookmarks found')
+  selectedBookmark.value = hitBookmarks.value[0]
+})
+
+async function getCurrentTab() {
+  const [tab] = await chrome.tabs.query({
+    active: true,
+    currentWindow: true
+  });
+  return tab;
+}
+async function setHitBookmarks() {
+  const tab = currentTab.value!
+  assert(tab, 'no current tab')
+  const activeUrl = new URL(tab.url || '')
+  activeUrl.hash = ''
+  const keywords = [
+    activeUrl.href,
+    tab.title
+  ]
+  while (activeUrl.pathname.match(/^\/[^/]+/)) {
+    activeUrl.pathname = activeUrl.pathname.replace(/\/[^/]*$/, "");
+    keywords.push(activeUrl.href)
+  }
+  for (const [key, value] of activeUrl.searchParams.entries()) {
+    keywords.push(`${key}=${value}`)
+  }
+  for (const keyword of keywords) {
+    if (!keyword?.trim()) {
+      continue
+    }
+    const b = await chrome.bookmarks.search(keyword)
+    return b
+  }
+  return []
+}
+async function gotoSibling(offset: number) {
+  const siblings = await chrome.bookmarks.getChildren(
+    selectedBookmark.value!.parentId || '',
+  )
+  if (siblings.length <= 1) {
+    return
+  }
+  let newIndex = selectedBookmark.value!.index || 0
+  while (true) {
+    newIndex += offset
+    if (newIndex === -1) {
+      newIndex = siblings.length - 1
+    }
+    const newMarkbook = siblings[newIndex % siblings.length]!;
+    const isFolder = !!newMarkbook.children || !newMarkbook.url
+    const isSeparator = newMarkbook.url === 'data:'
+    if (isFolder || isSeparator) {
+      continue
+    }
+    await chrome.tabs.update(currentTab.value!.id!, { url: newMarkbook.url });
+    window.close();
+    break
+  }
+}
+async function replaceBookmark() {
+  const pageInfo = await new Promise<chrome.bookmarks.BookmarkChangesArg>((resolve, reject) => {
+    chrome.tabs.sendMessage(currentTab.value!.id!, { action: 'getPageInfo' }, (response) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message))
+      } else {
+        resolve(response)
+      }
+    })
+  })
+  try {
+    await chrome.bookmarks.update(selectedBookmark.value!.id, pageInfo);
+  } catch (error) {
+    $q.notify({
+      type: 'error',
+      message: String(error)
+    })
+    return
+  }
+  $q.notify({
+    type: 'success',
+    message: 'Updated!'
+  })
+}
 </script>

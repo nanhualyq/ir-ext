@@ -9,20 +9,6 @@
  */
 import { createBridge } from '#q-app/bex/background';
 
-function openExtension() {
-  chrome.tabs.create(
-    {
-      url: chrome.runtime.getURL('www/index.html'),
-    },
-    (/* newTab */) => {
-      // Tab opened.
-    },
-  );
-}
-
-chrome.runtime.onInstalled.addListener(openExtension);
-chrome.action.onClicked.addListener(openExtension);
-
 declare module '@quasar/app-vite' {
   interface BexEventMap {
     /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -194,3 +180,7 @@ bridge.warn('Hello', 'world!');
 bridge.warn('Hello world!', { some: 'data' });
 bridge.warn('Hello', 'world', '!', { some: 'object' });
 */
+
+bridge.on('getBookmarkByUrl', ({ payload: url }) => {
+  return chrome.bookmarks.search({ url });
+});
