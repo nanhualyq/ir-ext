@@ -161,6 +161,8 @@ bridge.warn('Hello', 'world', '!', { some: 'object' });
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'getPageInfo') {
     sendResponse(getPageInfo());
+  } else if (message.action === 'scrollLastText') {
+    void scrollLastText();
   }
 });
 
