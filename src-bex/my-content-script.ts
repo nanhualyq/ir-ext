@@ -166,10 +166,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-function countOccurrences(str: string, subStr: string) {
-  const regex = new RegExp(subStr, 'g'); // 全局匹配
-  const matches = str.match(regex);
-  return matches ? matches.length : 0;
+function countOccurrences(subStr: string) {
+  const elList = document.querySelectorAll('body > *:not(script)');
+  for (const el of elList) {
+    const regex = new RegExp(subStr, 'g'); // 全局匹配
+    const matches = el.textContent?.match(regex);
+    if (matches?.length) {
+      return matches.length;
+    }
+  }
+  return 0;
 }
 
 function getPageInfo() {
@@ -186,7 +192,7 @@ function getPageInfo() {
   if (selection?.type === 'Range') {
     const selectionText = selection.toString().trim();
     title += `___lastText=${selectionText}`;
-    if (countOccurrences(document.body.textContent || '', selectionText) > 1) {
+    if (countOccurrences(selectionText) > 1) {
       alert('Your selected text is not unique!');
     }
   }
