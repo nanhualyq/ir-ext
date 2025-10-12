@@ -52,6 +52,8 @@ async function setHitBookmarks() {
   const tab = currentTab.value!
   assert(tab, 'no current tab')
   const activeUrl = new URL(tab.url || '')
+  const searchParams = new URLSearchParams(activeUrl.search)
+  activeUrl.search = ''
   activeUrl.hash = ''
   const keywords = [
     activeUrl.href,
@@ -61,7 +63,7 @@ async function setHitBookmarks() {
     activeUrl.pathname = activeUrl.pathname.replace(/\/[^/]*$/, "");
     keywords.push(activeUrl.href)
   }
-  for (const [key, value] of activeUrl.searchParams.entries()) {
+  for (const [key, value] of searchParams.entries()) {
     keywords.push(`${key}=${value}`)
   }
   for (const keyword of keywords) {
