@@ -1,6 +1,6 @@
 {
   "name": "ir-ext",
-  "version": "0.0.2",
+  "version": "0.0.5",
   "description": "Incremental Reading by bookmarks",
   "productName": "ir-ext",
   "author": "lyq <nanhualyq@gmail.com>",

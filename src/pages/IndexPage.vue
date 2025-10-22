@@ -14,6 +14,7 @@
       <q-btn color="primary" icon="check" label="Update" @click="replaceBookmark" accesskey="u" />
       <q-btn label="Prev" icon="arrow_back" accesskey="p" @click="gotoSibling(-1)" />
       <q-btn label="Next" icon="arrow_forward" accesskey="n" @click="gotoSibling(1)" />
+      <q-btn label="ScrollLast" icon="unfold_more_double" accesskey="s" @click="scrollLast" />
     </q-btn-group>
   </main>
 </template>
@@ -51,6 +52,8 @@ async function setHitBookmarks() {
   const tab = currentTab.value!
   assert(tab, 'no current tab')
   const activeUrl = new URL(tab.url || '')
+  const searchParams = new URLSearchParams(activeUrl.search)
+  activeUrl.search = ''
   activeUrl.hash = ''
   const keywords = [
     activeUrl.href,
@@ -60,7 +63,7 @@ async function setHitBookmarks() {
     activeUrl.pathname = activeUrl.pathname.replace(/\/[^/]*$/, "");
     keywords.push(activeUrl.href)
   }
-  for (const [key, value] of activeUrl.searchParams.entries()) {
+  for (const [key, value] of searchParams.entries()) {
     keywords.push(`${key}=${value}`)
   }
   for (const keyword of keywords) {
@@ -68,7 +71,9 @@ async function setHitBookmarks() {
       continue
     }
     const b = await chrome.bookmarks.search(keyword)
-    return b
+    if (b.length) {
+      return b
+    }
   }
   return []
 }
@@ -119,5 +124,8 @@ async function replaceBookmark() {
     type: 'success',
     message: 'Updated!'
   })
+}
+function scrollLast() {
+  void chrome.tabs.sendMessage(currentTab.value!.id!, { action: 'scrollLastText' })
 }
 </script>
