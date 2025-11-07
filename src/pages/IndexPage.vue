@@ -52,13 +52,13 @@ async function setHitBookmarks() {
   const tab = currentTab.value!
   assert(tab, 'no current tab')
   const activeUrl = new URL(tab.url || '')
-  const searchParams = new URLSearchParams(activeUrl.search)
-  activeUrl.search = ''
-  activeUrl.hash = ''
   const keywords = [
     activeUrl.href,
     tab.title
   ]
+  const searchParams = new URLSearchParams(activeUrl.search)
+  activeUrl.search = ''
+  activeUrl.hash = ''
   while (activeUrl.pathname.match(/^\/[^/]+/)) {
     activeUrl.pathname = activeUrl.pathname.replace(/\/[^/]*$/, "");
     keywords.push(activeUrl.href)
