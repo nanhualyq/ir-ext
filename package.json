@@ -12,7 +12,8 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
-    "postinstall": "wxt prepare"
+    "postinstall": "wxt prepare",
+    "submit:firefox": "wxt submit --firefox-zip .output/wxt-react-starter-0.0.7-firefox.zip --firefox-sources-zip .output/wxt-react-starter-0.0.7-sources.zip"
   },
   "dependencies": {
     "react": "^19.1.1",

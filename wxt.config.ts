@@ -1,6 +1,22 @@
-import { defineConfig } from 'wxt';
+import { defineConfig } from "wxt";
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
-  modules: ['@wxt-dev/module-react'],
+  manifest: {
+    version: '0.0.7',
+    permissions: ["bookmarks"],
+    browser_specific_settings: {
+      gecko: {
+        id: "ir-ext@lyq.one",
+      },
+    },
+    commands: {
+      _execute_browser_action: {
+        suggested_key: {
+          default: "Alt+I",
+        },
+      },
+    },
+  },
+  modules: ["@wxt-dev/module-react"],
 });
