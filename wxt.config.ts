@@ -3,7 +3,7 @@ import { defineConfig } from "wxt";
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   manifest: {
-    version: '0.0.7',
+    version: '0.0.8',
     permissions: ["bookmarks"],
     browser_specific_settings: {
       gecko: {
