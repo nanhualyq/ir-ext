@@ -20,7 +20,9 @@ export default memo(function ({
         if (list.length === 0) {
           throw Error("No Bookmarks Matched");
         }
-        setBookmark(list[0]);
+        if (list.length === 1) {
+          setBookmark(list[0]);
+        }
       }),
     []
   );
@@ -48,7 +50,7 @@ export default memo(function ({
           return b;
         }
       } catch (error) {
-          // fix: url like about:debugging#/runtime/this-firefox
+        // fix: url like about:debugging#/runtime/this-firefox
         continue;
       }
     }
@@ -63,7 +65,7 @@ export default memo(function ({
             type="radio"
             name="selected"
             value={index}
-            defaultChecked={index === 0}
+            defaultChecked={bookmarks.length === 1}
             autoFocus={index === 0}
             onChange={() => setBookmark(bookmark)}
           />
