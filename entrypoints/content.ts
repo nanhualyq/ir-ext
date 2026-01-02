@@ -1,7 +1,10 @@
 export default defineContentScript({
   matches: ["<all_urls>"],
-  main() {
-    scrollLastText()
+  main(ctx) {
+    scrollLastText();
+    ctx.addEventListener(window, "keyup", handleKeyup, {
+      passive: true,
+    });
     browser.runtime.onMessage.addListener(function (
       message: any,
       sender: Browser.runtime.MessageSender,
@@ -45,7 +48,7 @@ function getPageInfo(sendResponse: (o: any) => void) {
     title += `___lastText=${selectionText}`;
     if (countOccurrences(selectionText) > 1) {
       alert("Your selected text is not unique!");
-      return
+      return;
     }
   }
   sendResponse({
@@ -56,34 +59,122 @@ function getPageInfo(sendResponse: (o: any) => void) {
 
 async function scrollLastText() {
   const [bookmark] = await browser.runtime.sendMessage({
-    action: 'getBookmarkByUrl',
-    url: window.location.href
-  })
+    action: "getBookmarkByUrl",
+    url: window.location.href,
+  });
   if (!bookmark) {
-    console.log('ir-ext', 'no bookmark');
+    console.log("ir-ext", "no bookmark");
     return;
   }
-  const lastText = bookmark.title.match(/___lastText=(.*)$/)?.[1] || '';
+  const lastText = bookmark.title.match(/___lastText=(.*)$/)?.[1] || "";
   if (!lastText) {
-    console.log('ir-ext', 'no lastText');
+    console.log("ir-ext", "no lastText");
     return;
   }
 
-  console.log('ir-ext', `start find lastText: ${lastText}`);
-  const elements = Array.from(document.querySelectorAll('body *:not(script)'));
+  console.log("ir-ext", `start find lastText: ${lastText}`);
+  const elements = Array.from(document.querySelectorAll("body *:not(script)"));
   for (let i = elements.length - 1; i >= 0; i--) {
     const el = elements[i]!;
-    if (el.textContent?.replaceAll(/\s+/g, ' ')?.includes(lastText)) {
-      console.log('ir-ext', `lastText match element`, el);
+    if (el.textContent?.replaceAll(/\s+/g, " ")?.includes(lastText)) {
+      console.log("ir-ext", `lastText match element`, el);
       if (el instanceof HTMLElement) {
         Object.assign(el.style, {
           // backgroundColor: 'yellow',
-          textDecoration: 'line-through',
+          textDecoration: "line-through",
         });
       }
       el.scrollIntoView();
       return;
     }
   }
-  console.log('ir-ext', 'lastText not match any element');
+  console.log("ir-ext", "lastText not match any element");
+}
+
+const CODE = Symbol();
+const HTML = Symbol();
+let mode: symbol | null = null;
+
+function setMode(m: symbol) {
+  mode = m;
+  setTimeout(() => {
+    mode = null;
+  }, 3000);
+}
+
+const keysMap = {
+  "ctrl+alt+1": () => postAnki(),
+  "ctrl+alt+2": () => postAnki({ field: "Back" }),
+  "ctrl+alt+3": () => postAnki({ modelName: "@Cloze", field: "Text" }),
+  "ctrl+alt+c": () => setMode(CODE),
+  "ctrl+alt+h": () => setMode(HTML),
+};
+
+function handleKeyup(e: KeyboardEvent) {
+  let key = e.ctrlKey ? "ctrl+" : "";
+  key += e.altKey ? "alt+" : "";
+  key += e.key;
+  if (key in keysMap) {
+    keysMap[key as "ctrl+alt+1"]();
+  }
+}
+
+function escapeHTML(str: string) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function getAllSelectedHTML() {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return "";
+  const container = document.createElement("div");
+
+  for (let i = 0; i < selection.rangeCount; i++) {
+    container.appendChild(selection.getRangeAt(i).cloneContents());
+  }
+  return container.innerHTML;
+}
+
+function getText() {
+  const text = window?.getSelection()?.toString();
+  if (!text) {
+    return "";
+  }
+  if (mode === CODE) {
+    return `<pre><code>${escapeHTML(text)}</code></pre><br>`;
+  } else if (mode === HTML) {
+    return getAllSelectedHTML();
+  }
+  return text;
+}
+
+function postAnki(options?: { field?: string; modelName?: string }) {
+  browser.runtime
+    .sendMessage({
+      action: "fetch",
+      url: "http://127.0.0.1:8765",
+      options: {
+        method: "POST",
+        body: JSON.stringify({
+          version: 6,
+          action: "guiAddCards",
+          params: {
+            note: {
+              deckName: "Default",
+              modelName: options?.modelName || "@Basic",
+              fields: {
+                [options?.field || "Front"]: getText(),
+                Url: location.href,
+                Title: document.title,
+              },
+            },
+          },
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    })
+    .then(console.log);
 }
