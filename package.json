@@ -13,7 +13,7 @@
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
     "postinstall": "wxt prepare",
-    "submit:firefox": "wxt submit --firefox-zip .output/ir-ext-0.0.8-firefox.zip --firefox-sources-zip .output/ir-ext-0.0.8-sources.zip"
+    "submit:firefox": "wxt submit --firefox-zip .output/ir-ext-0.0.9-firefox.zip --firefox-sources-zip .output/ir-ext-0.0.9-sources.zip"
   },
   "dependencies": {
     "react": "^19.1.1",
