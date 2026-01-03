@@ -38,7 +38,9 @@ onMounted(async () => {
   currentTab.value = await getCurrentTab()
   hitBookmarks.value = await setHitBookmarks()
   assert(hitBookmarks.value.length, 'no bookmarks found')
-  selectedBookmark.value = hitBookmarks.value[0]
+  if (hitBookmarks.value.length === 1) {
+    selectedBookmark.value = hitBookmarks.value[0]
+  }
 })
 
 async function getCurrentTab() {
@@ -52,13 +54,14 @@ async function setHitBookmarks() {
   const tab = currentTab.value!
   assert(tab, 'no current tab')
   const activeUrl = new URL(tab.url || '')
+  const keywords = [
+    activeUrl.href,
+    tab.title,
+    tab.title?.replace(/___lastText=.+$/, '')
+  ]
   const searchParams = new URLSearchParams(activeUrl.search)
   activeUrl.search = ''
   activeUrl.hash = ''
-  const keywords = [
-    activeUrl.href,
-    tab.title
-  ]
   while (activeUrl.pathname.match(/^\/[^/]+/)) {
     activeUrl.pathname = activeUrl.pathname.replace(/\/[^/]*$/, "");
     keywords.push(activeUrl.href)
