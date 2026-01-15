@@ -1,7 +1,7 @@
 <template>
   <div class="column q-pa-md full-height">
-    <q-tree v-model:selected="selectedNode" :nodes="folderTree" node-key="value" label-key="label" default-expand-all
-      no-connectors dense class="full-width q-mb-md" style="min-height: 200px" selected-color="primary" />
+    <q-tree v-model:selected="selectedNode" v-model:expanded="expandedNodes" :nodes="folderTree" node-key="value"
+      label-key="label" class="full-width q-mb-md" style="min-height: 200px" selected-color="primary" dense />
     <q-btn color="primary" label="Add Bookmark" :disable="!selectedNode" @click="addBookmark" accesskey="a" />
   </div>
 </template>
@@ -19,6 +19,7 @@ interface FolderNode {
 const $q = useQuasar();
 const folderTree = ref<FolderNode[]>([]);
 const selectedNode = ref<string | null>(null);
+const expandedNodes = ref<string[]>([]);
 const currentTab = ref<chrome.tabs.Tab>();
 
 onMounted(async () => {
@@ -43,6 +44,7 @@ async function loadFolders(): Promise<void> {
   const rootNode = bookmarks[0]!;
   if (rootNode.children) {
     folderTree.value = rootNode.children.flatMap((child) => extractFolders(child, 0));
+    expandedNodes.value = getAllFolderIds(rootNode.children);
   }
 }
 
@@ -57,6 +59,17 @@ function extractFolders(node: chrome.bookmarks.BookmarkTreeNode, depth: number =
     });
   }
   return nodes;
+}
+
+function getAllFolderIds(nodes: chrome.bookmarks.BookmarkTreeNode[]): string[] {
+  const ids: string[] = [];
+  for (const node of nodes) {
+    if (node.children) {
+      ids.push(node.id);
+      ids.push(...getAllFolderIds(node.children));
+    }
+  }
+  return ids;
 }
 
 async function addBookmark(): Promise<void> {
