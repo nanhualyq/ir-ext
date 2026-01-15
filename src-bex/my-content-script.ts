@@ -203,6 +203,7 @@ function getPageInfo() {
 }
 
 async function scrollLastText() {
+  await bridge.connectToBackground().catch(console.warn);
   const [bookmark] = await bridge.send({
     event: 'getBookmarkByUrl',
     payload: window.location.href,
