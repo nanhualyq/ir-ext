@@ -1,6 +1,9 @@
 <template>
   <div class="q-pa-md">
     <q-item tag="label">
+      <q-item-section avatar>
+        <q-icon name="arrow_downward" />
+      </q-item-section>
       <q-item-section>
         <q-item-label>Move to end after 10s</q-item-label>
       </q-item-section>
@@ -9,6 +12,9 @@
       </q-item-section>
     </q-item>
     <q-item tag="label">
+      <q-item-section avatar>
+        <q-icon name="delete" />
+      </q-item-section>
       <q-item-section>
         <q-item-label>Delete after 10s</q-item-label>
       </q-item-section>
@@ -28,7 +34,7 @@ const props = defineProps<{
 }>();
 
 const $q = useQuasar();
-const bridge = $q.bex
+const bridge = $q.bex;
 
 const moveToEndEnabled = ref(false);
 const deleteEnabled = ref(false);
