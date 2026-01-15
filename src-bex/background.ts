@@ -18,6 +18,11 @@ declare module '@quasar/app-vite' {
     'storage.get': [string | undefined, any];
     'storage.set': [{ key: string; value: any }, void];
     'storage.remove': [string, void];
+    'alarm.create': [
+      { name: string; bookmarkId: string; parentId?: string; action: 'moveToEnd' | 'delete' },
+      void,
+    ];
+    'alarm.cancel': [string, void];
     /* eslint-enable @typescript-eslint/no-explicit-any */
   }
 }
@@ -183,4 +188,56 @@ bridge.warn('Hello', 'world', '!', { some: 'object' });
 
 bridge.on('getBookmarkByUrl', ({ payload: url }) => {
   return chrome.bookmarks.search({ url });
+});
+
+function showNotification(title: string, message: string) {
+  const id = `async-action-${Date.now()}`;
+  chrome.notifications.create(id, {
+    type: 'basic',
+    iconUrl: 'icons/icon-48x48.png',
+    title,
+    message,
+  });
+}
+
+async function executeMoveToEnd(bookmarkId: string, parentId: string) {
+  try {
+    const siblings = await chrome.bookmarks.getChildren(parentId);
+    const lastIndex = siblings.length - 1;
+    await chrome.bookmarks.move(bookmarkId, { index: lastIndex });
+    showNotification('Moved to end', 'Bookmark moved to end of folder');
+  } catch (error) {
+    showNotification('Move failed', String(error));
+  }
+}
+
+async function executeDelete(bookmarkId: string) {
+  try {
+    await chrome.bookmarks.remove(bookmarkId);
+    showNotification('Deleted', 'Bookmark deleted');
+  } catch (error) {
+    showNotification('Delete failed', String(error));
+  }
+}
+
+bridge.on('alarm.create', ({ payload: { name, bookmarkId, parentId, action } }) => {
+  const delayMinutes = 10 / 60;
+  void chrome.alarms.create(name, { delayInMinutes: delayMinutes });
+
+  const alarmListener = (alarm: chrome.alarms.Alarm) => {
+    if (alarm.name === name) {
+      chrome.alarms.onAlarm.removeListener(alarmListener);
+      void chrome.alarms.clear(name);
+      if (action === 'moveToEnd' && parentId) {
+        void executeMoveToEnd(bookmarkId, parentId);
+      } else if (action === 'delete') {
+        void executeDelete(bookmarkId);
+      }
+    }
+  };
+  chrome.alarms.onAlarm.addListener(alarmListener);
+});
+
+bridge.on('alarm.cancel', ({ payload: name }) => {
+  void chrome.alarms.clear(name);
 });

@@ -1,5 +1,6 @@
 <template>
-  <main>
+  <no-bookmark v-if="!hitBookmarks.length" />
+  <main v-else>
     <q-list bordered dense>
       <q-item tag="label" v-ripple v-for="b in hitBookmarks" :key="b.id" tabindex="-1">
         <q-item-section avatar>
@@ -10,17 +11,22 @@
         </q-item-section>
       </q-item>
     </q-list>
-    <q-btn-group v-if="selectedBookmark">
-      <q-btn color="primary" icon="check" label="Update" @click="replaceBookmark" accesskey="u" />
-      <q-btn label="Prev" icon="arrow_back" accesskey="p" @click="gotoSibling(-1)" />
-      <q-btn label="Next" icon="arrow_forward" accesskey="n" @click="gotoSibling(1)" />
-      <q-btn label="ScrollLast" icon="unfold_more_double" accesskey="s" @click="scrollLast" />
-    </q-btn-group>
+    <template v-if="selectedBookmark">
+      <q-btn-group>
+        <q-btn color="primary" icon="check" label="Update" @click="replaceBookmark" accesskey="u" />
+        <q-btn label="Prev" icon="arrow_back" accesskey="p" @click="gotoSibling(-1)" />
+        <q-btn label="Next" icon="arrow_forward" accesskey="n" @click="gotoSibling(1)" />
+        <q-btn label="ScrollLast" icon="unfold_more_double" accesskey="s" @click="scrollLast" />
+      </q-btn-group>
+      <async-actions :bookmark="selectedBookmark!" />
+    </template>
   </main>
 </template>
 
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
+import AsyncActions from 'src/components/AsyncActions.vue';
+import NoBookmark from 'src/components/NoBookmark.vue';
 import { onMounted, ref } from 'vue';
 
 const $q = useQuasar()
@@ -28,16 +34,9 @@ const hitBookmarks = ref<chrome.bookmarks.BookmarkTreeNode[]>([])
 const selectedBookmark = ref<chrome.bookmarks.BookmarkTreeNode>()
 const currentTab = ref<chrome.tabs.Tab>()
 
-function assert(conn: unknown, message: string) {
-  if (!conn) {
-    throw new Error(message)
-  }
-}
-
 onMounted(async () => {
   currentTab.value = await getCurrentTab()
   hitBookmarks.value = await setHitBookmarks()
-  assert(hitBookmarks.value.length, 'no bookmarks found')
   if (hitBookmarks.value.length === 1) {
     selectedBookmark.value = hitBookmarks.value[0]
   }
@@ -52,7 +51,6 @@ async function getCurrentTab() {
 }
 async function setHitBookmarks() {
   const tab = currentTab.value!
-  assert(tab, 'no current tab')
   const activeUrl = new URL(tab.url || '')
   const keywords = [
     activeUrl.href,

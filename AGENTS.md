@@ -86,21 +86,6 @@ npm run firefox
 - **Trailing commas**: Allowed
 - **Final newline**: Required
 
-### Error Handling
-
-- Use `try/catch` for async operations
-- Use `assert()` helper for invariants (see `src/pages/IndexPage.vue:31`):
-  ```typescript
-  function assert(conn: unknown, message: string) {
-    if (!conn) throw new Error(message);
-  }
-  ```
-- Convert errors to strings for display: `String(error)`
-- Use Quasar Notify for user-facing errors:
-  ```typescript
-  $q.notify({ type: 'error', message: String(error) });
-  ```
-
 ### Chrome Extension APIs
 
 - Use `chrome.bookmarks`, `chrome.tabs`, `chrome.runtime`, `chrome.storage`
@@ -135,6 +120,16 @@ bridge.send({ event: 'storage.get', to: 'app', payload: 'key' });
 bridge.on('storage.get', ({ payload: key }) => {
   /* ... */
 });
+```
+
+```vue
+<script setup>
+import { useQuasar } from 'quasar';
+const $q = useQuasar();
+
+// Use $q.bex (the bridge)
+// $q.bex.portName is "app"
+</script>
 ```
 
 ## Dependencies

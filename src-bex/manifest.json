@@ -8,7 +8,7 @@
       "128": "icons/icon-128x128.png"
     },
 
-    "permissions": ["storage", "tabs", "bookmarks", "activeTab"],
+    "permissions": ["storage", "tabs", "bookmarks", "activeTab", "alarms", "notifications"],
 
     "host_permissions": ["*://*/*"],
     "content_security_policy": {
