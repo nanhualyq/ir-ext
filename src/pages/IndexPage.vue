@@ -1,6 +1,5 @@
 <template>
-  <no-bookmark v-if="!hitBookmarks.length" />
-  <main v-else>
+  <main>
     <q-list bordered dense>
       <q-item tag="label" v-ripple v-for="b in hitBookmarks" :key="b.id" tabindex="-1">
         <q-item-section avatar>
@@ -18,6 +17,7 @@
       <action-buttons :bookmark="selectedBookmark!" :current-tab="currentTab!" />
       <async-actions :bookmark="selectedBookmark!" />
     </template>
+    <no-bookmark />
   </main>
 </template>
 

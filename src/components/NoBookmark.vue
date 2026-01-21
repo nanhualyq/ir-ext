@@ -1,7 +1,7 @@
 <template>
   <div class="column q-pa-md full-height">
     <q-tree v-model:selected="selectedNode" v-model:expanded="expandedNodes" :nodes="folderTree" node-key="value"
-      label-key="label" class="full-width q-mb-md" style="min-height: 200px" selected-color="primary" dense />
+      label-key="label" class="full-width q-mb-md" style="min-height: 100px" selected-color="primary" dense />
     <q-btn color="primary" label="Add Bookmark" :disable="!selectedNode" @click="addBookmark" accesskey="a" />
   </div>
 </template>
@@ -96,9 +96,3 @@ async function addBookmark(): Promise<void> {
   }
 }
 </script>
-
-<style scoped>
-.full-height {
-  min-height: 300px;
-}
-</style>
