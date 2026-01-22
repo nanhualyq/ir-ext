@@ -11,7 +11,7 @@
         <q-checkbox v-model="moveToEndEnabled" accessKey="m" />
       </q-item-section>
     </q-item>
-    <q-item tag="label">
+    <q-item tag="label" :class="{ 'text-red': deleteEnabled }">
       <q-item-section avatar>
         <q-icon name="delete" />
       </q-item-section>

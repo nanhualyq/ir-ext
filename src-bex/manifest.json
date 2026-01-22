@@ -1,7 +1,7 @@
 {
   "all": {
     "manifest_version": 3,
-    "version": "0.0.15",
+    "version": "0.0.16",
     "license": "MIT",
 
     "icons": {
