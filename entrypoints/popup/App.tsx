@@ -15,6 +15,42 @@ function App() {
     'idle' | 'saving' | 'saved' | 'error'
   >('idle');
 
+  const handleNavigateToSibling = useCallback(
+    async (direction: 'prev' | 'next') => {
+      if (!selectedId || !tab) return;
+
+      try {
+        const [bookmark] = await browser.bookmarks.get(selectedId);
+        if (!bookmark?.parentId) return;
+
+        const allChildren = await browser.bookmarks.getChildren(
+          bookmark.parentId,
+        );
+        // Only keep actual bookmarks (skip separators, folders, etc.)
+        const children = allChildren.filter(
+          (c) => (c as any).type !== 'separator' && typeof c.url === 'string' && c.url.length > 0,
+        );
+        const index = children.findIndex((c) => c.id === selectedId);
+        if (index === -1) return;
+
+        const len = children.length;
+        const targetIndex =
+          direction === 'prev'
+            ? (index - 1 + len) % len
+            : (index + 1) % len;
+
+        const target = children[targetIndex];
+        if (!target) return;
+
+        await browser.tabs.update(tab.id, { url: target.url! });
+        window.close();
+      } catch {
+        // silently fail
+      }
+    },
+    [selectedId, tab],
+  );
+
   const handleSavePosition = useCallback(async () => {
     if (!selectedId || !tab) return;
 
@@ -135,6 +171,18 @@ function App() {
 
       <div className="px-2 pb-2 flex gap-2">
         <button
+          disabled={!selectedId}
+          onClick={() => handleNavigateToSibling('prev')}
+          className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors
+            ${
+              !selectedId
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer'
+            }`}
+        >
+          ◀ Prev
+        </button>
+        <button
           disabled={!selectedId || saveStatus === 'saving'}
           onClick={handleSavePosition}
           className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors
@@ -149,6 +197,18 @@ function App() {
             }`}
         >
           {saveButtonText}
+        </button>
+        <button
+          disabled={!selectedId}
+          onClick={() => handleNavigateToSibling('next')}
+          className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors
+            ${
+              !selectedId
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer'
+            }`}
+        >
+          Next ▶
         </button>
       </div>
     </div>
