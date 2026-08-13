@@ -119,6 +119,12 @@ export default defineContentScript({
         }
         return true;
       }
+
+      if (message.type === 'scrollToLastPosition') {
+        autoScrollToPosition();
+        sendResponse({ ok: true });
+        return true;
+      }
     });
   },
 });

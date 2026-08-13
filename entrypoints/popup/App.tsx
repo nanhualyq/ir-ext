@@ -90,6 +90,16 @@ function App() {
     }
   }, [selectedId, tab]);
 
+  const handleScrollToPosition = useCallback(async () => {
+    if (!tab) return;
+    try {
+      await browser.tabs.sendMessage(tab.id, { type: 'scrollToLastPosition' });
+    } catch {
+      // Content script not injected on this page
+    }
+    window.close();
+  }, [tab]);
+
   if (tabLoading || bookmarksLoading) {
     return (
       <div className="w-[360px] min-h-[400px] bg-white text-gray-900 font-sans">
@@ -209,6 +219,14 @@ function App() {
             }`}
         >
           Next ▶
+        </button>
+      </div>
+      <div className="px-2 pb-2">
+        <button
+          onClick={handleScrollToPosition}
+          className="w-full px-3 py-2 text-sm font-medium rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 cursor-pointer transition-colors"
+        >
+          ↓ Scroll to last position
         </button>
       </div>
     </div>
