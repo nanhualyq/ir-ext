@@ -132,12 +132,12 @@ function App() {
 
   const saveButtonText =
     saveStatus === 'saving'
-      ? 'Saving…'
+      ? 'Updating…'
       : saveStatus === 'saved'
-        ? '✓ Saved'
+        ? '✓ Updated'
         : saveStatus === 'error'
           ? '✗ Failed'
-          : '📌 Save Position';
+          : null;
 
   return (
     <div className="w-[360px] min-h-[400px] bg-white text-gray-900 font-sans">
@@ -185,6 +185,7 @@ function App() {
         <button
           disabled={!selectedId}
           onClick={() => handleNavigateToSibling('prev')}
+          accessKey="p"
           className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors
             ${
               !selectedId
@@ -192,11 +193,12 @@ function App() {
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer'
             }`}
         >
-          ◀ Prev
+          ◀ <u>P</u>rev
         </button>
         <button
           disabled={!selectedId || saveStatus === 'saving'}
           onClick={handleSavePosition}
+          accessKey="u"
           className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors
             ${
               !selectedId || saveStatus === 'saving'
@@ -208,11 +210,12 @@ function App() {
                     : 'bg-gray-900 text-white hover:bg-gray-700 cursor-pointer'
             }`}
         >
-          {saveButtonText}
+          {saveButtonText ?? <>📌 <u>U</u>pdate Position</>}
         </button>
         <button
           disabled={!selectedId}
           onClick={() => handleNavigateToSibling('next')}
+          accessKey="n"
           className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors
             ${
               !selectedId
@@ -220,7 +223,7 @@ function App() {
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer'
             }`}
         >
-          Next ▶
+          <u>N</u>ext ▶
         </button>
       </div>
       <div className="px-2 pb-2">

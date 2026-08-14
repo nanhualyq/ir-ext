@@ -42,7 +42,7 @@ export function AddBookmarkPanel({ tab }: Props) {
         ? '✓ Added!'
         : status === 'error'
           ? '✗ Failed'
-          : '＋ Add Bookmark';
+          : null;
 
   return (
     <div className="px-2 pb-2">
@@ -101,6 +101,7 @@ export function AddBookmarkPanel({ tab }: Props) {
         <button
           disabled={!selectedFolderId || status === 'saving'}
           onClick={handleAdd}
+          accessKey="a"
           className={`w-full mt-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors
             ${
               !selectedFolderId || status === 'saving'
@@ -112,7 +113,7 @@ export function AddBookmarkPanel({ tab }: Props) {
                     : 'bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer'
             }`}
         >
-          {statusText}
+          {statusText ?? <>＋ <u>A</u>dd Bookmark</>}
         </button>
       </div>
     </div>
