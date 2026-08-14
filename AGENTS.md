@@ -71,6 +71,17 @@ WXT provides global functions for extension entry points:
 - `browser.tabs.query({ active: true, currentWindow: true })` — get current tab
 - `browser.bookmarks.search(query)` — search bookmarks
 
+### Browser Bookmarks API Gotchas
+- `browser.bookmarks.getChildren(parentId)` returns items where **separators** have `type: "separator"` and `url: "data:"` (not `undefined`!). Filtering by `!!c.url` alone is NOT sufficient — separators pass the filter.
+- The `type` field is present at runtime but **not in WXT's TypeScript types** — use `(c as any).type` to access it.
+- Always filter with `(c as any).type !== 'separator'` AND `typeof c.url === 'string' && c.url.length > 0` to get only navigable bookmarks.
+- To navigate siblings: `browser.bookmarks.get(id)` to get `parentId`, then `browser.bookmarks.getChildren(parentId)` for siblings. Use modulo `(index ± 1 + len) % len` for wrap-around.
+
+### Popup → Content Script Communication
+- Popup sends to content script via `browser.tabs.sendMessage(tab.id, { type: '...', ... })`.
+- Content script registers handlers via `browser.runtime.onMessage.addListener()` and must `return true` for async `sendResponse`.
+- For actions that affect the page (scroll, highlight), call `window.close()` in the popup handler after sending the message so the popup doesn't obstruct the result.
+
 ### Popup Component Pattern
 - Use **early return** for loading/empty states (keep main JSX clean)
 - Each state (loading, empty, list) returns its own complete `<div>` wrapper
@@ -93,3 +104,10 @@ WXT provides global functions for extension entry points:
 - Output directory `.output/` is also auto-generated
 - Use `wxt prepare` to regenerate types (runs automatically via postinstall)
 - Manifest permissions (`tabs`, `bookmarks`) declared in `wxt.config.ts` under `manifest.permissions`
+
+## Feature: Position Saving & Navigation
+- Position marker constant: `POSITION_MARKER = '@ir-ext-last-position@'` in `entrypoints/popup/lib/constants.ts`
+- **Saving**: Popup reads selected text via `browser.tabs.sendMessage(tab.id, { type: 'getSelection' })`, appends `POSITION_MARKER + selectedText` to bookmark title, then updates via `browser.bookmarks.update()`.
+- **Auto-scroll**: Content script (`content.ts`) searches bookmarks by URL, parses position text from title, finds element by text content via `TreeWalker`, and scrolls + highlights. Runs on page load via `waitForBody()`.
+- **Manual scroll**: Popup sends `{ type: 'scrollToLastPosition' }` message; content script re-runs `autoScrollToPosition()`.
+- **Sibling navigation**: Prev/Next buttons get parent's children, filter to URL bookmarks only (skip separators/folders), and navigate with wrap-around.
