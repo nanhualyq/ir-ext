@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { POSITION_MARKER } from './lib/constants';
 import { useActiveTab } from './lib/useActiveTab';
 import { useBookmarks } from './lib/useBookmarks';
+import { AddBookmarkPanel } from './AddBookmarkPanel';
 
 function App() {
   const { tab, loading: tabLoading } = useActiveTab();
@@ -124,6 +125,7 @@ function App() {
         <p className="text-sm text-gray-400 py-8 text-center">
           No bookmarks found.
         </p>
+        <AddBookmarkPanel tab={tab} />
       </div>
     );
   }
@@ -229,6 +231,8 @@ function App() {
           ↓ Scroll to last position
         </button>
       </div>
+
+      <AddBookmarkPanel tab={tab} />
     </div>
   );
 }

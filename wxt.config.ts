@@ -8,6 +8,6 @@ export default defineConfig({
     plugins: [tailwindcss()],
   }),
   manifest: {
-    permissions: ['tabs', 'bookmarks'],
+    permissions: ['tabs', 'bookmarks', 'storage'],
   },
 });
