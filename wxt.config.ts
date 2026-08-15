@@ -8,7 +8,7 @@ export default defineConfig({
     plugins: [tailwindcss()],
   }),
   manifest: {
-    permissions: ['tabs', 'bookmarks', 'storage'],
+    permissions: ['tabs', 'bookmarks', 'storage', 'notifications', 'alarms'],
     browser_specific_settings: {
       gecko: {
         id: 'ir-ext@lyq.one',

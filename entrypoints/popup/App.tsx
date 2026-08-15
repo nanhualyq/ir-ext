@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { POSITION_MARKER } from './lib/constants';
 import { useActiveTab } from './lib/useActiveTab';
 import { useBookmarks } from './lib/useBookmarks';
@@ -15,6 +15,18 @@ function App() {
   const [saveStatus, setSaveStatus] = useState<
     'idle' | 'saving' | 'saved' | 'error'
   >('idle');
+  const [pendingAction, setPendingAction] = useState<null | {
+    type: 'delete' | 'moveToEnd';
+  }>(null);
+
+  // Sync pending action state from background on mount
+  useEffect(() => {
+    browser.runtime
+      .sendMessage({ type: 'getPendingAction' })
+      .then((res) => {
+        if (res?.type) setPendingAction({ type: res.type });
+      });
+  }, []);
 
   const handleNavigateToSibling = useCallback(
     async (direction: 'prev' | 'next') => {
@@ -51,6 +63,35 @@ function App() {
     },
     [selectedId, tab],
   );
+
+  const handleDelete = useCallback(async () => {
+    if (!selectedId) return;
+    const bookmark = bookmarks.find((b) => b.id === selectedId);
+    const title = bookmark?.title ?? 'Untitled';
+    await browser.runtime.sendMessage({
+      type: 'scheduleDelete',
+      bookmarkId: selectedId,
+      bookmarkTitle: title,
+    });
+    setPendingAction({ type: 'delete' });
+  }, [selectedId, bookmarks]);
+
+  const handleMoveToEnd = useCallback(async () => {
+    if (!selectedId) return;
+    const bookmark = bookmarks.find((b) => b.id === selectedId);
+    const title = bookmark?.title ?? 'Untitled';
+    await browser.runtime.sendMessage({
+      type: 'scheduleMoveToEnd',
+      bookmarkId: selectedId,
+      bookmarkTitle: title,
+    });
+    setPendingAction({ type: 'moveToEnd' });
+  }, [selectedId, bookmarks]);
+
+  const handleCancelPending = useCallback(async () => {
+    await browser.runtime.sendMessage({ type: 'cancelPendingAction' });
+    setPendingAction(null);
+  }, []);
 
   const handleSavePosition = useCallback(async () => {
     if (!selectedId || !tab) return;
@@ -234,6 +275,54 @@ function App() {
           ↓ Scroll to last position
         </button>
       </div>
+
+      {/* Delete / Move to End buttons */}
+      <div className="px-2 pb-2 flex gap-2">
+        <button
+          disabled={!selectedId || !!pendingAction}
+          onClick={handleDelete}
+          accessKey="d"
+          className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors
+            ${
+              !selectedId || !!pendingAction
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 cursor-pointer'
+            }`}
+        >
+          🗑️ <u>D</u>elete
+        </button>
+        <button
+          disabled={!selectedId || !!pendingAction}
+          onClick={handleMoveToEnd}
+          accessKey="m"
+          className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors
+            ${
+              !selectedId || !!pendingAction
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer'
+            }`}
+        >
+          ⬇️ <u>M</u>ove to End
+        </button>
+      </div>
+
+      {/* Pending action indicator */}
+      {pendingAction && (
+        <div className="px-2 pb-2">
+          <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-yellow-50 border border-yellow-200">
+            <span className="text-sm text-yellow-700">
+              ⏳ Pending:{' '}
+              {pendingAction.type === 'delete' ? 'delete' : 'move to end'}
+            </span>
+            <button
+              onClick={handleCancelPending}
+              className="text-sm font-medium text-yellow-800 underline hover:text-yellow-900 cursor-pointer shrink-0"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       <AddBookmarkPanel tab={tab} />
     </div>
