@@ -3,7 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
-  modules: ['@wxt-dev/module-react'],
+  modules: ['@wxt-dev/auto-icons', '@wxt-dev/module-react'],
   vite: () => ({
     plugins: [tailwindcss()],
   }),
