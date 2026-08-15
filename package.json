@@ -1,8 +1,10 @@
 {
-  "name": "wxt-react-starter",
-  "description": "manifest.json description",
+  "name": "ir-ext",
+  "version": "0.0.17",
+  "description": "Incremental Reading by bookmarks",
+  "productName": "ir-ext",
+  "author": "lyq <nanhualyq@gmail.com>",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
