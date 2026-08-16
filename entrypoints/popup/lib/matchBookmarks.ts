@@ -80,11 +80,11 @@ export function matchBookmarks(
   pageTitle: string,
 ): MatchedBookmark[] {
   // Tier 1: 精确匹配（归一化 protocol/www/trailing slash）
+  const currentNorm = normalizeUrl(currentUrl, { stripProtocol: true });
   const tier1 = bookmarks.filter((b) => {
     if (!b.url) return false;
     // URL 完全匹配（归一化后）
     const normalized = normalizeUrl(b.url, { stripProtocol: true });
-    const currentNorm = normalizeUrl(currentUrl, { stripProtocol: true });
     if (normalized === currentNorm) return true;
     // title 完全匹配
     if (pageTitle && b.title === pageTitle) return true;

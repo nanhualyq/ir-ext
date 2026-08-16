@@ -19,7 +19,7 @@ function notify(
   const id = `ir-ext-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   browser.notifications.create(id, {
     type: 'basic',
-    iconUrl: browser.runtime.getURL('/icon/96.png'),
+    iconUrl: browser.runtime.getURL('/icons/128.png'),
     title,
     message,
     priority: opts?.priority ?? 2,
@@ -104,7 +104,33 @@ export default defineBackground(() => {
   // ── Message handler ──────────────────────────────────────────────
   browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message.type === 'searchBookmarks') {
-      browser.bookmarks.search(message.query).then(sendResponse);
+      const query = String(message.query);
+      // bookmarks.search 对 file:// URL 不支持，去掉协议前缀再搜
+      const searchQuery = query.startsWith('file://') ? query.slice(7) : query;
+      browser.bookmarks.search(searchQuery).then((results) => {
+        // 如果模糊搜索无结果，回退到遍历书签树精确匹配
+        if (results.length === 0 && query.startsWith('file://')) {
+          browser.bookmarks.getTree().then((tree) => {
+            const walk = (nodes: any[]): any[] => {
+              const out: any[] = [];
+              for (const node of nodes) {
+                if (node.url) out.push(node);
+                if (node.children) out.push(...walk(node.children));
+              }
+              return out;
+            };
+            const all = tree.flatMap((root: any) => (root.children ? walk(root.children) : []));
+            sendResponse(all.filter((b: any) => {
+              if (!b.url) return false;
+              if (b.url === query) return true;
+              try { return decodeURIComponent(b.url) === decodeURIComponent(query); }
+              catch { return false; }
+            }));
+          });
+        } else {
+          sendResponse(results);
+        }
+      });
       return true;
     }
 
