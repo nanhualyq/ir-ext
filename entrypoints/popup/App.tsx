@@ -55,7 +55,22 @@ function App() {
         const target = children[targetIndex];
         if (!target) return;
 
-        await browser.tabs.update(tab.id, { url: target.url! });
+        const navigateUrl = target.url!.startsWith('file:')
+          ? decodeURI(target.url!)
+          : target.url!;
+
+        try {
+          await browser.tabs.update(tab.id, { url: navigateUrl });
+        } catch {
+          if (target.url!.startsWith('file:')) {
+            try {
+              await navigator.clipboard.writeText(navigateUrl);
+              alert('Chrome 无法直接打开 file:// 链接，已复制到剪贴板，请粘贴到地址栏打开。');
+            } catch {
+              prompt('Chrome 无法打开此链接，请手动复制：', navigateUrl);
+            }
+          }
+        }
         window.close();
       } catch {
         // silently fail
