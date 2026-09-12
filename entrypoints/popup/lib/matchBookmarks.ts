@@ -25,7 +25,7 @@ function normalizeUrl(
 ): string {
   try {
     const u = new URL(url);
-    const host = u.hostname.replace(/^www\./, '');
+    const host = u.host.replace(/^www\./, '');
     let pathname = u.pathname.replace(/\/+$/, '') || '/';
 
     if (options.stripSearch) u.search = '';
@@ -50,15 +50,19 @@ function pathRelated(p1: string, p2: string): boolean {
 }
 
 /**
- * 提取 hostname + pathname（归一化）
+ * 提取 hostname + port + pathname（归一化）
+ * - hostname: 不含端口，用于子域名包含匹配
+ * - port: 端口号（默认端口为空字符串），用于端口精确匹配
+ * - pathname: 路径
  */
 function hostPath(
   url: string,
-): { host: string; pathname: string } | null {
+): { hostname: string; port: string; pathname: string } | null {
   try {
     const u = new URL(url);
     return {
-      host: u.hostname.replace(/^www\./, ''),
+      hostname: u.hostname.replace(/^www\./, ''),
+      port: u.port, // 默认端口时为空字符串
       pathname: u.pathname.replace(/\/+$/, '') || '/',
     };
   } catch {
@@ -86,8 +90,12 @@ export function matchBookmarks(
     // URL 完全匹配（归一化后）
     const normalized = normalizeUrl(b.url, { stripProtocol: true });
     if (normalized === currentNorm) return true;
-    // title 完全匹配
-    if (pageTitle && b.title === pageTitle) return true;
+    // title 完全匹配 — 要求同主机+同端口，避免不同站点同名页面误匹配
+    if (pageTitle && b.title === pageTitle) {
+      const cHP = hostPath(currentUrl);
+      const bHP = hostPath(b.url);
+      if (cHP && bHP && cHP.hostname === bHP.hostname && cHP.port === bHP.port) return true;
+    }
     return false;
   });
   if (tier1.length > 0) return tier1.map((b) => ({ ...b, tier: 1 }));
@@ -142,11 +150,14 @@ export function matchBookmarks(
       const bHP = hostPath(b.url);
       if (!bHP) return false;
 
-      // host 包含匹配
+      // 端口必须一致（默认端口为空字符串，自然相等）
+      if (bHP.port !== currentHP.port) return false;
+
+      // hostname 子域名包含匹配
       const hostMatch =
-        bHP.host === currentHP.host ||
-        bHP.host.includes(currentHP.host) ||
-        currentHP.host.includes(bHP.host);
+        bHP.hostname === currentHP.hostname ||
+        bHP.hostname.includes(currentHP.hostname) ||
+        currentHP.hostname.includes(bHP.hostname);
       if (!hostMatch) return false;
 
       // 逐级裁剪 path，检查包含

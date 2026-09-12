@@ -231,3 +231,80 @@ describe('边界情况', () => {
     expect(result[0].tier).toBe(1);
   });
 });
+
+describe('端口号匹配', () => {
+  test('相同主机不同端口 → 不匹配 (Tier 1)', () => {
+    const bookmarks = [bk('1', 'http://localhost:3000/page')];
+    const result = matchBookmarks(bookmarks, 'http://localhost:8080/page', '');
+    expect(result).toHaveLength(0);
+  });
+
+  test('相同主机相同端口 → 匹配 (Tier 1)', () => {
+    const bookmarks = [bk('1', 'http://localhost:3000/page')];
+    const result = matchBookmarks(bookmarks, 'http://localhost:3000/page', '');
+    expect(result).toHaveLength(1);
+    expect(result[0].tier).toBe(1);
+  });
+
+  test('默认端口省略 vs 显式端口 → 匹配', () => {
+    // http 默认端口是 80，URL API 会自动省略
+    const bookmarks = [bk('1', 'http://example.com:80/page')];
+    const result = matchBookmarks(bookmarks, 'http://example.com/page', '');
+    expect(result).toHaveLength(1);
+    expect(result[0].tier).toBe(1);
+  });
+
+  test('非默认端口 vs 无端口 → 不匹配', () => {
+    const bookmarks = [bk('1', 'http://example.com:8080/page')];
+    const result = matchBookmarks(bookmarks, 'http://example.com/page', '');
+    expect(result).toHaveLength(0);
+  });
+
+  test('相同主机不同端口 → 不匹配 (Tier 4)', () => {
+    const bookmarks = [bk('1', 'http://localhost:3000/a/b')];
+    const result = matchBookmarks(bookmarks, 'http://localhost:8080/a', '');
+    expect(result).toHaveLength(0);
+  });
+
+  test('相同主机相同端口 → 匹配 (Tier 4)', () => {
+    const bookmarks = [bk('1', 'http://localhost:3000/a/b')];
+    const result = matchBookmarks(bookmarks, 'http://localhost:3000/a', '');
+    expect(result).toHaveLength(1);
+    expect(result[0].tier).toBe(4);
+  });
+});
+
+describe('用户场景: 相同主机不同端口', () => {
+  test('http://www.abc.com 不匹配 http://www.abc.com:88', () => {
+    const bookmarks = [bk('1', 'http://www.abc.com:88/page')];
+    const result = matchBookmarks(bookmarks, 'http://www.abc.com/page', '');
+    expect(result).toHaveLength(0);
+  });
+
+  test('https://www.abc.com 不匹配 https://www.abc.com:88', () => {
+    const bookmarks = [bk('1', 'https://www.abc.com:88/')];
+    const result = matchBookmarks(bookmarks, 'https://www.abc.com/', '');
+    expect(result).toHaveLength(0);
+  });
+});
+
+describe('Tier 1 title 匹配与端口', () => {
+  test('同标题不同端口不同路径 → 不匹配', () => {
+    const bookmarks = [bk('1', 'https://www.ruanyifeng.com:88/blog/2026/09/weekly-issue-412.html', '科技爱好者周刊')];
+    const result = matchBookmarks(bookmarks, 'https://www.ruanyifeng.com/blog/2026/09/weekly-issue-412.html', '科技爱好者周刊');
+    expect(result).toHaveLength(0);
+  });
+
+  test('同标题同主机同端口不同路径 → 匹配 (Tier 1 title)', () => {
+    const bookmarks = [bk('1', 'https://www.ruanyifeng.com/blog/other.html', '科技爱好者周刊')];
+    const result = matchBookmarks(bookmarks, 'https://www.ruanyifeng.com/blog/2026/09/weekly-issue-412.html', '科技爱好者周刊');
+    expect(result).toHaveLength(1);
+    expect(result[0].tier).toBe(1);
+  });
+
+  test('同标题不同主机 → 不匹配', () => {
+    const bookmarks = [bk('1', 'https://other.com/page', 'My Page')];
+    const result = matchBookmarks(bookmarks, 'https://example.com/page', 'My Page');
+    expect(result).toHaveLength(0);
+  });
+});
